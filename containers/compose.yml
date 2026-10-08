@@ -1,0 +1,48 @@
+# compose.yaml
+name: influxdb3
+services:
+  influxdb3-core:
+    container_name: influxdb3-core
+    image: influxdb:3-core
+    ports:
+      - 8181:8181
+    command:
+      - influxdb3
+      - serve
+      - --node-id=${INFLUXDB_NODE_ID}
+      - --object-store=file
+      - --data-dir=/var/lib/influxdb3/data
+      - --plugin-dir=/var/lib/influxdb3/plugins
+    volumes:
+      - influxdb3-storage:/var/lib/influxdb3
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f -H 'Authorization: Bearer ${INFLUXDB_TOKEN}' http://localhost:8181/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  influxdb3-explorer:
+    container_name: influxdb3-explorer
+    image: influxdata/influxdb3-ui
+    command: ["--mode=admin"]
+    ports:
+      - 8080:8080
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    ports: 
+     - "${GRAFANA_PORT}:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+    depends_on:
+      - influxdb3-core
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    restart: unless-stopped
+
+volumes:
+  influxdb3-storage:
+  grafana-storage:
