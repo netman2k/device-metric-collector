@@ -45,6 +45,9 @@ services:
       - influxdb3-core
     volumes:
       - grafana-storage:/var/lib/grafana
+      - $PWD/Grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - $PWD/Grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - $PWD/Grafana/dashboards:/var/lib/grafana/dashboards:ro
     restart: unless-stopped
 
 volumes:
