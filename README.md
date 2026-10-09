@@ -29,15 +29,13 @@ I chose this architecture because:
   
 - **Dashboard — Grafana**: query InfluxDB through SQL and visualize metrics with an auto-provisioned datasource and dashboard, so a fresh environment comes up with charts ready.
   
-- **Alarming & integration — Amazon CloudWatch** (production target): trigger alarms on defined criteria and integrate with other AWS services (e.g. Lambda) to automate responses. Not exercised in this repo, since development is local with open-source tooling only.
+- **Alarming & integration — Amazon CloudWatch** (production target): trigger alarms on defined criteria and integrate with other AWS services (e.g. Lambda) to automate responses. Grafana also has built-in alerting and can send notifications to channels like Slack (or email, webhooks, etc.) when a rule meets a threshold — so in the local setup, for example, you could alert if CPU utilisation exceeds 80%. That's a natural choice while staying within open-source tooling.
 
 
 
 ## Development environment
 
-Since there is no AWS account for development and testing, the production
-CloudWatch path is replaced locally with open-source tooling: the Python
-collector pushes metrics to a local InfluxDB 3 instance, visualized with Grafana.
+Since there is no AWS account for development and testing, the production CloudWatch path is replaced locally with open-source tooling: the Python collector pushes metrics to a local InfluxDB 3 instance, visualized with Grafana.
 All backend services run as containers via `podman-compose` (`containers/compose.yml`).
 
 ![Dev](assets/architecture_dev.png)
@@ -77,7 +75,11 @@ podman-compose exec influxdb3-core influxdb3 create database \
   --retention-period 30d edge_dev_db --token <TOKEN>
 ```
 
-Put the token in `containers/.env` (`INFLUXDB_TOKEN=<TOKEN>`) - Grafana's provisioned datasource reads it at startup and in `influxdb3-explorer/config.json` (`"DEFAULT_API_TOKEN": "<TOKEN>"`)  - InfluxDB3 Explorer's provisioned database configuration reads it at startup.
+Put the token in
+
+-  `containers/.env` (`INFLUXDB_TOKEN=<TOKEN>`) - Grafana's provisioned datasource reads it at startup
+- `influxdb3-explorer/config.json` (`"DEFAULT_API_TOKEN": "<TOKEN>"`)  - InfluxDB3 Explorer's provisioned database configuration reads it at startup.
+- (`token: <TOKEN>`)
 
 Now bring up everything:
 
