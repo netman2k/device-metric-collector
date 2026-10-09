@@ -1,0 +1,6 @@
+{
+  "DEFAULT_INFLUX_SERVER": "http://influxdb3-core:8181",
+  "DEFAULT_INFLUX_DATABASE": "edge_dev_db",
+  "DEFAULT_API_TOKEN": "<TOKEN>",
+  "DEFAULT_SERVER_NAME": "Local InfluxDB 3"
+}
