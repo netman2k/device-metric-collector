@@ -143,7 +143,7 @@ def main():
             try:
                 points = collect_metrics()
 
-                if args.verbose == 2:
+                if args.verbose > 1:
                     for point in points:
                         logging.debug(point.to_line_protocol())
 
