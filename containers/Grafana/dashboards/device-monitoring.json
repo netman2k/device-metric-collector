@@ -1,21 +1,28 @@
 {
-  "apiVersion": "dashboard.grafana.app/v2",
   "kind": "Dashboard",
+  "apiVersion": "dashboard.grafana.app/v2",
   "metadata": {
     "name": "adg7mrb",
     "namespace": "default",
-    "uid": "6a369823-ee41-4df4-96df-a00ce47af238",
-    "resourceVersion": "1791488722060015",
-    "generation": 15,
-    "creationTimestamp": "2026-10-08T17:04:55Z",
+    "uid": "0a628709-cb39-467e-925b-939d16a6778d",
+    "resourceVersion": "1791572748969005",
+    "generation": 7,
+    "creationTimestamp": "2026-10-09T15:05:36Z",
     "labels": {
-      "grafana.app/deprecatedInternalID": "557619874471936"
+      "grafana.app/deprecatedInternalID": "889983053725696"
     },
     "annotations": {
-      "grafana.app/createdBy": "user:bg0mh4us1064gf",
+      "grafana.app/createdBy": "access-policy:service",
+      "grafana.app/folder": "",
+      "grafana.app/managedBy": "classic-file-provisioning",
+      "grafana.app/managerAllowsEdits": "true",
+      "grafana.app/managerId": "device-monitoring",
       "grafana.app/saved-from-ui": "Grafana v13.2.3 (90ffed056f)",
-      "grafana.app/updatedBy": "user:bg0mh4us1064gf",
-      "grafana.app/updatedTimestamp": "2026-10-08T19:45:22Z"
+      "grafana.app/sourceChecksum": "8c40a0bc13d62b3bc757a27f9b207196",
+      "grafana.app/sourcePath": "/var/lib/grafana/dashboards/device-monitoring.json",
+      "grafana.app/sourceTimestamp": "1791572001000",
+      "grafana.app/updatedBy": "user:ag0pvbatd0cg0a",
+      "grafana.app/updatedTimestamp": "2026-10-09T19:05:48Z"
     }
   },
   "spec": {
@@ -75,7 +82,7 @@
                         "policy": "edge_dev_db",
                         "query": "SELECT * FROM \"edge_dev_db\".\"cpu\" WHERE $timeFilter",
                         "rawQuery": true,
-                        "rawSql": "SELECT * FROM \"cpu\" WHERE \"time\" >= $__timeFrom AND \"time\" <= $__timeTo AND device IN ($device) ORDER BY \"time\" ",
+                        "rawSql": "SELECT * FROM \"cpu\" WHERE \"time\" >= $__timeFrom AND \"time\" <= $__timeTo AND device IN (${device:singlequote}) ORDER BY \"time\" ",
                         "resultFormat": "time_series",
                         "select": [
                           [
@@ -141,7 +148,7 @@
                             "id": "998bb9bb-0123-4456-b89a-b1a11cee1d9c",
                             "type": "group"
                           },
-                          "whereString": "device IN ($device)"
+                          "whereString": "device IN (${device:singlequote})"
                         },
                         "table": "cpu",
                         "tags": [
@@ -270,7 +277,7 @@
                         "policy": "edge_dev_db",
                         "query": "SELECT percent FROM \"edge_dev_db\".\"disk\" WHERE (\"device\" =~ /^$device$/) AND $timeFilter",
                         "rawQuery": true,
-                        "rawSql": "SELECT *  FROM \"disk\" WHERE \"time\" >= $__timeFrom AND \"time\" <= $__timeTo AND device IN ($device) ORDER BY \"time\"",
+                        "rawSql": "SELECT *  FROM \"disk\" WHERE \"time\" >= $__timeFrom AND \"time\" <= $__timeTo AND device IN (${device:singlequote}) ORDER BY \"time\"",
                         "resultFormat": "time_series",
                         "select": [
                           [
@@ -337,6 +344,7 @@
               },
               "fieldConfig": {
                 "defaults": {
+                  "unit": "gbytes",
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
@@ -425,7 +433,7 @@
                         "policy": "edge_dev_db",
                         "query": "SELECT percent FROM \"edge_dev_db\".\"memory\" WHERE (\"device\" =~ /^$device$/) AND $timeFilter\n",
                         "rawQuery": true,
-                        "rawSql": "SELECT * FROM \"memory\" WHERE \"time\" >= $__timeFrom AND \"time\" <= $__timeTo AND device IN ($device) ORDER BY \"time\"",
+                        "rawSql": "SELECT * FROM \"memory\" WHERE \"time\" >= $__timeFrom AND \"time\" <= $__timeTo AND device IN (${device:singlequote}) ORDER BY \"time\"",
                         "resultFormat": "time_series",
                         "select": [
                           [
@@ -491,6 +499,7 @@
               },
               "fieldConfig": {
                 "defaults": {
+                  "unit": "deckbytes",
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
@@ -580,7 +589,7 @@
                         "policy": "edge_dev_db",
                         "query": "SELECT  memory_percent, vram_memory_total, vram_memory_usage FROM \"edge_dev_db\".\"gpu\" WHERE (\"device\" =~ /^$device$/) AND $timeFilter",
                         "rawQuery": true,
-                        "rawSql": "SELECT vram_memory_total, time FROM \"gpu\" WHERE \"time\" >= $__timeFrom AND \"time\" <= $__timeTo AND device IN ($device) ",
+                        "rawSql": "SELECT vram_memory_total, time FROM \"gpu\" WHERE \"time\" >= $__timeFrom AND \"time\" <= $__timeTo AND device IN (${device:singlequote}) ",
                         "resultFormat": "time_series",
                         "select": [
                           [
@@ -642,7 +651,7 @@
                         "policy": "edge_dev_db",
                         "query": "SELECT  memory_percent, vram_memory_total, vram_memory_usage FROM \"edge_dev_db\".\"gpu\" WHERE (\"device\" =~ /^$device$/) AND $timeFilter",
                         "rawQuery": true,
-                        "rawSql": "SELECT vram_memory_usage, time FROM \"gpu\" WHERE \"time\" >= $__timeFrom AND \"time\" <= $__timeTo AND device IN ($device) ",
+                        "rawSql": "SELECT vram_memory_usage, time FROM \"gpu\" WHERE \"time\" >= $__timeFrom AND \"time\" <= $__timeTo AND device IN (${device:singlequote}) ",
                         "resultFormat": "time_series",
                         "select": [
                           [
@@ -708,6 +717,7 @@
               },
               "fieldConfig": {
                 "defaults": {
+                  "unit": "bytes",
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
@@ -797,7 +807,7 @@
                         "policy": "edge_dev_db",
                         "query": "SELECT gpu_percent FROM \"edge_dev_db\".\"gpu\" WHERE (\"device\" =~ /^$device$/) AND $timeFilter",
                         "rawQuery": true,
-                        "rawSql": "SELECT gpu_percent,time FROM \"gpu\" WHERE \"time\" >= $__timeFrom AND \"time\" <= $__timeTo AND device IN ($device) ",
+                        "rawSql": "SELECT gpu_percent,time FROM \"gpu\" WHERE \"time\" >= $__timeFrom AND \"time\" <= $__timeTo AND device IN (${device:singlequote}) ",
                         "resultFormat": "time_series",
                         "select": [
                           [
@@ -1022,6 +1032,108 @@
       {
         "kind": "QueryVariable",
         "spec": {
+          "name": "country",
+          "current": {
+            "text": "IE",
+            "value": "IE"
+          },
+          "label": "Country",
+          "hide": "dontHide",
+          "refresh": "onDashboardLoad",
+          "skipUrlSync": false,
+          "query": {
+            "kind": "DataQuery",
+            "group": "influxdb",
+            "version": "v0",
+            "datasource": {
+              "name": "fg0mhmiqnun7ka"
+            },
+            "spec": {
+              "query": "SELECT DISTINCT country from cpu",
+              "refId": "InfluxVariableQueryEditor-VariableQuery"
+            }
+          },
+          "regex": "",
+          "regexApplyTo": "value",
+          "sort": "disabled",
+          "definition": "SELECT DISTINCT country from cpu",
+          "options": [],
+          "multi": false,
+          "includeAll": false,
+          "allowCustomValue": true
+        }
+      },
+      {
+        "kind": "QueryVariable",
+        "spec": {
+          "name": "region",
+          "current": {
+            "text": "Leinster",
+            "value": "Leinster"
+          },
+          "label": "Region",
+          "hide": "dontHide",
+          "refresh": "onDashboardLoad",
+          "skipUrlSync": false,
+          "query": {
+            "kind": "DataQuery",
+            "group": "influxdb",
+            "version": "v0",
+            "datasource": {
+              "name": "fg0mhmiqnun7ka"
+            },
+            "spec": {
+              "query": "SELECT DISTINCT region from cpu",
+              "refId": "InfluxVariableQueryEditor-VariableQuery"
+            }
+          },
+          "regex": "",
+          "regexApplyTo": "value",
+          "sort": "disabled",
+          "definition": "SELECT DISTINCT region from cpu",
+          "options": [],
+          "multi": false,
+          "includeAll": false,
+          "allowCustomValue": true
+        }
+      },
+      {
+        "kind": "QueryVariable",
+        "spec": {
+          "name": "city",
+          "current": {
+            "text": "Dublin",
+            "value": "Dublin"
+          },
+          "label": "City",
+          "hide": "dontHide",
+          "refresh": "onDashboardLoad",
+          "skipUrlSync": false,
+          "query": {
+            "kind": "DataQuery",
+            "group": "influxdb",
+            "version": "v0",
+            "datasource": {
+              "name": "fg0mhmiqnun7ka"
+            },
+            "spec": {
+              "query": "SELECT DISTINCT city from cpu",
+              "refId": "InfluxVariableQueryEditor-VariableQuery"
+            }
+          },
+          "regex": "",
+          "regexApplyTo": "value",
+          "sort": "disabled",
+          "definition": "SELECT DISTINCT city from cpu",
+          "options": [],
+          "multi": false,
+          "includeAll": false,
+          "allowCustomValue": true
+        }
+      },
+      {
+        "kind": "QueryVariable",
+        "spec": {
           "name": "device",
           "current": {
             "text": [
@@ -1043,14 +1155,14 @@
               "name": "fg0mhmiqnun7ka"
             },
             "spec": {
-              "query": "SELECT DISTINCT device FROM cpu WHERE $__timeFilter(time)",
+              "query": "SELECT DISTINCT device FROM cpu ",
               "refId": "InfluxVariableQueryEditor-VariableQuery"
             }
           },
           "regex": "",
           "regexApplyTo": "value",
           "sort": "disabled",
-          "definition": "SELECT DISTINCT device FROM cpu WHERE $__timeFilter(time)",
+          "definition": "SELECT DISTINCT device FROM cpu ",
           "options": [],
           "multi": true,
           "includeAll": false,
