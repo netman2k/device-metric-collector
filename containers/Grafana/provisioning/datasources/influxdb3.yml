@@ -1,0 +1,16 @@
+apiVersion: 1
+
+datasources:
+  - name: InfluxDB3-Edge
+    # Must match the datasource ref in the dashboard JSON ("name": "fg0mhmiqnun7ka").
+    uid: fg0mhmiqnun7ka
+    type: influxdb
+    access: proxy
+    url: http://influxdb3-core:8181
+    jsonData:
+      version: SQL
+      dbName: edge_dev_db
+      httpMode: POST
+      insecureGrpc: true
+    secureJsonData:
+      token: <TOKEN>
