@@ -102,6 +102,9 @@ def build_parser():
         help="InfluxDB access TOKEN (or INFLUXDB_TOKEN env)",
     )
     parser.add_argument("--influxdb-db", default=DATABASE, help="InfluxDB Database")
+    parser.add_argument(
+        "-v", "--verbose", action="count", default=1, help="Verbose level"
+    )
 
     return parser
 
@@ -111,7 +114,9 @@ def main():
     parser = build_parser()
     args = parser.parse_args()
 
-    configure_logging(log_file=args.log_file, log_dir=args.log_dir)
+    configure_logging(
+        log_file=args.log_file, log_dir=args.log_dir, verbosity=args.verbose
+    )
 
     logger.info("Starting collector process...")
 
@@ -137,6 +142,11 @@ def main():
         while True:
             try:
                 points = collect_metrics()
+
+                if args.verbose == 2:
+                    for point in points:
+                        logging.debug(point.to_line_protocol())
+
                 if client is not None:
                     if points:
                         client.write(points)

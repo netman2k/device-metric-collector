@@ -9,19 +9,17 @@ LEVELS = (logging.WARNING, logging.INFO, logging.DEBUG)
 
 
 def configure_logging(
-    log_file,
-    log_dir="./log",
-    when="midnight",
-    interval=1,
-    backup_count=7,
-    log_level=logging.INFO,
+    log_file, log_dir="./log", when="midnight", interval=1, backup_count=7, verbosity=0
 ) -> None:
     """Set up logging with TimedRotatingFile handler. Call once, from the entry point.
 
     `verbosity` is the number of -v flags: 0 = WARNING, 1 = INFO, 2+ = DEBUG.
     `log_file` addes a TimedRotatingFileHandler alongside the console handler.
     """
-    logging.basicConfig(format=LOG_FORMAT, level=log_level, force=True)
+
+    verbosity = 2 if verbosity > 2 else verbosity
+
+    logging.basicConfig(format=LOG_FORMAT, level=LEVELS[verbosity], force=True)
 
     os.makedirs(log_dir, exist_ok=True)
     log_path = os.path.join(log_dir, log_file)
