@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import time
 from contextlib import contextmanager
 
 import amdsmi
@@ -189,15 +190,30 @@ def collect_gpu_metrics(gpu_type):
         return {}
 
 
-def collect_cpu_metrics():
-    cpu_times = psutil.cpu_times_percent(interval=None)
-    metrics = {
-        "total": psutil.cpu_percent(interval=None),
+def collect_cpu_metrics(percpu=False):
+    cpu_times = psutil.cpu_times_percent(interval=None, percpu=percpu)
+    cpu_percents = psutil.cpu_percent(interval=None, percpu=percpu)
+
+    if isinstance(cpu_times, list):
+        metrics = {}
+        # per-cpu metric
+        cpu_count = psutil.cpu_count()
+        for n, (pct, t) in enumerate(zip(cpu_percents, cpu_times)):
+            metrics[n] = {
+                "total": pct,
+                "user_percent": t.user,
+                "system_percent": t.system,
+                "iowait_percent": t.iowait,
+            }
+
+        return metrics
+
+    return {
+        "total": cpu_percents,
         "user_percent": cpu_times.user,
         "system_percent": cpu_times.system,
-        "iowait_percent": getattr(cpu_times, "iowait", 0.0),
+        "iowait_percent": cpu_times.iowait,
     }
-    return metrics
 
 
 def collect_disk_metrics(path="/"):
@@ -232,24 +248,40 @@ def main():
         level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
     )
 
-    gpu_metrics = collect_gpu_metrics()
-    logging.debug("Collected GPU metrics: %s", json.dumps(gpu_metrics))
+    import argparse
 
-    cpu_metrics = collect_cpu_metrics()
-    logging.debug("Collected CPU metrics: %s", json.dumps(cpu_metrics))
+    parser = argparse.ArgumentParser(
+        prog="collector",
+        description="Get metrics from multiple devices",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument("--per-cpu", action="store_true", help="Collect per CPU metric")
 
-    mem_metrics = collect_mem_metrics()
-    logging.debug("Collected memory metrics: %s", json.dumps(mem_metrics))
+    args = parser.parse_args()
 
-    disk_metrics = collect_disk_metrics()
-    logging.debug("Collected disk metric: %s", json.dumps(disk_metrics))
+    psutil.cpu_percent()
+    psutil.cpu_times_percent()
+    time.sleep(1)
 
-    metrics = {
-        "gpu": gpu_metrics,
-        "cpu": cpu_metrics,
-        "memory": mem_metrics,
-        "disk": disk_metrics,
-    }
+    with gpu_session() as gpu_type:
+        gpu_metrics = collect_gpu_metrics(gpu_type)
+        logging.debug("Collected GPU metrics: %s", json.dumps(gpu_metrics))
+
+        cpu_metrics = collect_cpu_metrics(percpu=args.per_cpu)
+        logging.debug("Collected CPU metrics: %s", json.dumps(cpu_metrics))
+
+        mem_metrics = collect_mem_metrics()
+        logging.debug("Collected memory metrics: %s", json.dumps(mem_metrics))
+
+        disk_metrics = collect_disk_metrics()
+        logging.debug("Collected disk metric: %s", json.dumps(disk_metrics))
+
+        metrics = {
+            "gpu": gpu_metrics,
+            "cpu": cpu_metrics,
+            "memory": mem_metrics,
+            "disk": disk_metrics,
+        }
 
     logging.info("Collected metrics: %s", json.dumps(metrics))
 

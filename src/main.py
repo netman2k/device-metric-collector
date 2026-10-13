@@ -145,6 +145,9 @@ def main():
             # the first time this function is called with interval = 0.0 or None
             # it will return a meaningless 0.0 value which you are supposed to ignore.
             psutil.cpu_percent()
+            psutil.cpu_times_percent()
+
+            time.sleep(1)
 
             while True:
                 try:
