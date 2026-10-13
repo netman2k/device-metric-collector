@@ -178,16 +178,15 @@ def collect_amd_gpu_metrics():
     return metrics
 
 
-def collect_gpu_metrics():
+def collect_gpu_metrics(gpu_type):
     """Dispatch to the matching collect_* based on detected GPU."""
-    with gpu_session() as gpu_type:
-        if gpu_type == GPU_TYPE_NVIDIA:
-            return collect_nvidia_gpu_metrics()
-        elif gpu_type == GPU_TYPE_AMD:
-            return collect_amd_gpu_metrics()
-        else:
-            logger.warning("Unsupported GPU type: %s, no metrics collected", gpu_type)
-            return {}
+    if gpu_type == GPU_TYPE_NVIDIA:
+        return collect_nvidia_gpu_metrics()
+    elif gpu_type == GPU_TYPE_AMD:
+        return collect_amd_gpu_metrics()
+    else:
+        logger.warning("Unsupported GPU type: %s, no metrics collected", gpu_type)
+        return {}
 
 
 def collect_cpu_metrics():
