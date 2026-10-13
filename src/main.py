@@ -18,7 +18,7 @@ ENDPOINT = os.getenv("INFLUXDB_HOST", "http://127.0.0.1:8181")
 DATABASE = os.getenv("INFLUXDB_DATABASE", "edge_dev_db")
 
 
-def collect_metrics():
+def collect_metrics(gpu_type):
     points = []
 
     cpu = collector.collect_cpu_metrics()
@@ -31,7 +31,7 @@ def collect_metrics():
     )
 
     try:
-        gpus_metric = collector.collect_gpu_metrics()
+        gpus_metric = collector.collect_gpu_metrics(gpu_type)
     except Exception as e:
         logger.warning("GPU collection failed, continuing without GPU metrics: %s", e)
         gpus_metric = {}
@@ -139,22 +139,23 @@ def main():
         return
 
     try:
-        while True:
-            try:
-                points = collect_metrics()
+        with collector.gpu_session() as gpu_type:
+            while True:
+                try:
+                    points = collect_metrics(gpu_type)
 
-                if args.verbose > 1:
-                    for point in points:
-                        logging.debug(point.to_line_protocol())
+                    if args.verbose > 1:
+                        for point in points:
+                            logging.debug(point.to_line_protocol())
 
-                if client is not None:
-                    if points:
-                        client.write(points)
+                    if client is not None:
+                        if points:
+                            client.write(points)
 
-            except Exception as e:
-                logger.error("Error in metrics daemon: %s", e, exc_info=True)
+                except Exception as e:
+                    logger.error("Error in metrics daemon: %s", e, exc_info=True)
 
-            time.sleep(args.interval)
+                time.sleep(args.interval)
     except KeyboardInterrupt:
         logger.info("Collector stopped.")
     finally:
