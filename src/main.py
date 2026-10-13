@@ -147,6 +147,8 @@ def main():
             psutil.cpu_percent()
             psutil.cpu_times_percent()
 
+            time.sleep(1)
+
             while True:
                 try:
                     points = collect_metrics(gpu_type)
