@@ -4,6 +4,7 @@ import os
 import socket
 import time
 
+import psutil
 from influxdb_client_3 import InfluxDBClient3, Point, PointSettings
 
 from device_monitor import collector
@@ -140,6 +141,11 @@ def main():
 
     try:
         with collector.gpu_session() as gpu_type:
+            # Fix return meaningless 0.0 value at first runs:
+            # the first time this function is called with interval = 0.0 or None
+            # it will return a meaningless 0.0 value which you are supposed to ignore.
+            psutil.cpu_percent()
+
             while True:
                 try:
                     points = collect_metrics(gpu_type)
