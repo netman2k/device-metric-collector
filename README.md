@@ -127,12 +127,18 @@ Then open the Explorer at http://localhost:8080 or Grafana at http://localhost:3
 
 ### Notes
 
-- **AMD GPU hosts**: the `amdsmi` PyPI package (7.0.2) lacks some APIs, so on ROCm machines install the bundled sdist instead:
+- **AMD GPU hosts**: the `amdsmi` PyPI package (7.0.2) is stale and fails at import against `libamd_smi.so.27` (`undefined symbol: amdsmi_set_gpu_clk_range`). On ROCm ≤10.0 install the bundled sdist instead:
   
   ```
   cp -r /opt/rocm/share/amd_smi ~/amd_smi_installer
   pipenv install ~/amd_smi_installer
   rm -rf ~/amd_smi_installer
+  ```
+  On ROCm ≥10.1 the sdist packaging was removed (`pip install /opt/rocm/share/amd_smi` fails), so point the venv at the bundled wrapper with a `.pth` (tracks `/opt/rocm` upgrades automatically):
+  ```
+  VENV_SPO=$(echo $(pipenv --venv)/lib/python3*/site-packages)
+  echo "/opt/rocm/share/amd_smi" > "$VENV_SPO/rocm-amdsmi.pth"
+  # or per-shell: PYTHONPATH=/opt/rocm/share/amd_smi pipenv run python src/main.py
   ```
   Containers also need the DRM runtime (`libdrm-amdgpu1`, already in the `Dockerfile`) and `--device /dev/dri`. 
   Without GPU access the collector logs a warning and still writes CPU/memory/disk metrics.
