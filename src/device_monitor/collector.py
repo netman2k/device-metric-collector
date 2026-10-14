@@ -1,8 +1,8 @@
 import json
 import logging
-import os
 import time
 from contextlib import contextmanager
+from pathlib import Path
 
 import amdsmi
 import psutil
@@ -16,18 +16,18 @@ GPU_TYPE_INTEL = "INTEL"
 
 
 def detect_gpu_via_sysfs():
-    drm_path = "/sys/class/drm"
-    if not os.path.exists(drm_path):
+    drm_path = Path("/sys/class/drm")
+    if not drm_path.exists():
         return "Unknown (No DRM sub-system)"
 
     gpu_type = None
-    for folder in os.listdir(drm_path):
-        if folder.startswith("card") and "-" not in folder:
-            vendor_file = os.path.join(drm_path, folder, "device/vendor")
+    for folder in drm_path.iterdir():
+        if folder.name.startswith("card") and "-" not in folder.name:
+            vendor_file = folder / "device/vendor"
 
-            if os.path.exists(vendor_file):
+            if vendor_file.exists():
                 with open(vendor_file, "r") as f:
-                    vendor_id = f.read().strip().lower()
+                    vendor_id = vendor_file.read_text().strip().lower()
 
                 # Matching PCI Vendor ID
                 if "0x1002" in vendor_id:
@@ -244,9 +244,9 @@ def collect_mem_metrics():
 
 
 def main():
-    logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
-    )
+    # logging.basicConfig(
+    #     level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+    # )
 
     import argparse
 
@@ -283,7 +283,7 @@ def main():
             "disk": disk_metrics,
         }
 
-    logging.info("Collected metrics: %s", json.dumps(metrics))
+    # logging.info("Collected metrics: %s", json.dumps(metrics))
 
     print(json.dumps(metrics, indent=2, default=str))
 
