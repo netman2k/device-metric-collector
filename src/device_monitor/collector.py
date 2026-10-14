@@ -270,6 +270,20 @@ def collect_sensors_temp_metrics():
     return metrics
 
 
+def collect_net_io_counters_metrics():
+    nic_counters = psutil.net_io_counters(pernic=True)
+    metrics = {}
+    for nic, counter in nic_counters.items():
+        metrics[nic] = {
+            "bytes_sent": counter.bytes_sent,
+            "bytes_recv": counter.bytes_recv,
+            "packet_sent": counter.packets_sent,
+            "packet_recv": counter.packets_recv,
+        }
+
+    return metrics
+
+
 def main():
     # logging.basicConfig(
     #     level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
@@ -309,6 +323,9 @@ def main():
         sensors_metrics = collect_sensors_temp_metrics()
         # print("Collected sensors metric: %s", json.dumps(sensors_metrics))
 
+        net_io_metrics = collect_net_io_counters_metrics()
+        # print("Collected network IO metric: %s", json.dumps(net_io_metrics))
+
         metrics = {
             "gpu": gpu_metrics,
             "cpu": cpu_metrics,
@@ -316,6 +333,7 @@ def main():
             "disk": disk_metrics,
             "swap": swap_metrics,
             "sensors": sensors_metrics,
+            "net_io": net_io_metrics,
         }
 
     # logging.info("Collected metrics: %s", json.dumps(metrics))
