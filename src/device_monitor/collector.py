@@ -242,6 +242,34 @@ def collect_mem_metrics():
     return metrics
 
 
+def collect_swap_metrics():
+
+    swap = psutil.swap_memory()
+    return {
+        "total": swap.total,
+        "used": swap.used,
+        "free": swap.free,
+        "percent": swap.percent,
+        "sin": swap.sin,
+        "sout": swap.sout,
+    }
+
+
+def collect_sensors_temp_metrics():
+    sensors_temps = psutil.sensors_temperatures()
+    metrics = {}
+    for s, shwtemps in sensors_temps.items():
+        metrics[s] = {}
+        for i, shwtemp in enumerate(shwtemps):
+            metrics[s][i] = {
+                "current": shwtemp.current,
+                "high": shwtemp.high,
+                "critical": shwtemp.critical,
+            }
+
+    return metrics
+
+
 def main():
     # logging.basicConfig(
     #     level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
@@ -264,22 +292,30 @@ def main():
 
     with gpu_session() as gpu_type:
         gpu_metrics = collect_gpu_metrics(gpu_type)
-        logging.debug("Collected GPU metrics: %s", json.dumps(gpu_metrics))
+        # print("Collected GPU metrics: %s", json.dumps(gpu_metrics))
 
         cpu_metrics = collect_cpu_metrics(percpu=args.per_cpu)
-        logging.debug("Collected CPU metrics: %s", json.dumps(cpu_metrics))
+        # print("Collected CPU metrics: %s", json.dumps(cpu_metrics))
 
         mem_metrics = collect_mem_metrics()
-        logging.debug("Collected memory metrics: %s", json.dumps(mem_metrics))
+        # print("Collected memory metrics: %s", json.dumps(mem_metrics))
+
+        swap_metrics = collect_swap_metrics()
+        # print("Collected swap metrics: %s", json.dumps(swap_metrics))
 
         disk_metrics = collect_disk_metrics()
-        logging.debug("Collected disk metric: %s", json.dumps(disk_metrics))
+        # print("Collected disk metric: %s", json.dumps(disk_metrics))
+
+        sensors_metrics = collect_sensors_temp_metrics()
+        # print("Collected sensors metric: %s", json.dumps(sensors_metrics))
 
         metrics = {
             "gpu": gpu_metrics,
             "cpu": cpu_metrics,
             "memory": mem_metrics,
             "disk": disk_metrics,
+            "swap": swap_metrics,
+            "sensors": sensors_metrics,
         }
 
     # logging.info("Collected metrics: %s", json.dumps(metrics))
