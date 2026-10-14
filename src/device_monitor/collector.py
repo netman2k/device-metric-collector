@@ -79,18 +79,17 @@ def gpu_session():
     try:
         yield gpu_type
     finally:
-        if not initialized:
-            return
-        if gpu_type == GPU_TYPE_NVIDIA:
-            try:
-                pynvml.nvmlShutdown()
-            except pynvml.NVMLError as e:
-                logger.warning("Failed to shut down NVML: %s", e)
-        elif gpu_type == GPU_TYPE_AMD:
-            try:
-                amdsmi.amdsmi_shut_down()
-            except amdsmi.AmdSmiException as e:
-                logger.warning("Failed to shut down AMD SMI: %s", e)
+        if initialized:
+            if gpu_type == GPU_TYPE_NVIDIA:
+                try:
+                    pynvml.nvmlShutdown()
+                except pynvml.NVMLError as e:
+                    logger.warning("Failed to shut down NVML: %s", e)
+            elif gpu_type == GPU_TYPE_AMD:
+                try:
+                    amdsmi.amdsmi_shut_down()
+                except amdsmi.AmdSmiException as e:
+                    logger.warning("Failed to shut down AMD SMI: %s", e)
 
 
 def collect_nvidia_gpu_metrics():
