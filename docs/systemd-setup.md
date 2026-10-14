@@ -14,8 +14,20 @@ sudo chmod -R 750 /usr/local/share/MetricCollector
 Project layout expected:
 
 ```text
-/usr/local/share/MetricCollector/src/main.py
-/usr/local/share/MetricCollector/src/device_monitor/
+/usr/local/share/MetricCollector
+├── Pipfile
+└── src
+    ├── device_monitor
+    │   ├── collector.py
+    │   ├── __init__.py
+    │   └── logsetup.py
+    ├── log
+    │   ├── collector.log
+    │   ├── collector.log.2026-10-09
+    │   └── collector.log.2026-10-10
+    └── main.py
+
+4 directories, 8 files
 ```
 
 ## 2. Create service user
@@ -33,10 +45,17 @@ Do not reuse a venv from `/home/...` — `collector` cannot read it.
 ```bash
 sudo python3 -m venv /usr/local/share/MetricCollector/.venv
 sudo /usr/local/share/MetricCollector/.venv/bin/pip install --upgrade pip
-sudo /usr/local/share/MetricCollector/.venv/bin/pip install psutil influxdb3-python amdsmi nvidia-ml-py
+sudo /usr/local/share/MetricCollector/.venv/bin/pip install psutil influxdb3-python nvidia-ml-py
+SITE=$(sudo /usr/local/share/MetricCollector/.venv/bin/python -c "import site; print(site.getsitepackages()[0])")
+echo "/opt/rocm/share/amd_smi" | sudo tee "$SITE/rocm-amdsmi.pth" > /dev/null  # use ROCm's bundled wrapper, not PyPI amdsmi
 sudo chown -R root:collector /usr/local/share/MetricCollector/.venv
 sudo chmod -R 750 /usr/local/share/MetricCollector/.venv
 ```
+
+> Note 1:  I had to install `python3.14-venv` package before creating a virtual environment on Ubuntu 24.04
+>
+> Note 2 for AMD: You need to install the GPU packages before anything amdsmi-related:
+> https://rocm.docs.amd.com/en/latest/install/rocm.html?fam=ryzen&w=compute&gpu=amd-ryzen-ai-max-pro-495&os=ubuntu&ubuntu-ver=26.04.1&i=pkgman&gfx=gfx1151
 
 ## 4. Configure InfluxDB credentials
 
@@ -81,11 +100,18 @@ WantedBy=multi-user.target
 
 `LogsDirectory=` creates `/var/log/metric-collector` owned by `collector`. `main.py` creates the log file on startup via `os.makedirs(..., exist_ok=True)`.
 
-For AMD GPU add under `[Service]`:
+For AMD GPU add under `[Service]` (systemd does no shell expansion, so use
+the literal path, not `$LD_LIBRARY_PATH:...`):
 
 ```ini
 Environment=LD_LIBRARY_PATH=/opt/rocm/lib
 ```
+
+Kept as a fallback for the bare-SONAME linker lookup. With the `.pth`
+above the wrapper loads from `/opt/rocm/share/amd_smi` and resolves
+`/opt/rocm/lib/libamd_smi.so.27` via its built-in relocatable path, so it
+starts even without this line; `AMDSMI_LIB_OVERRIDE=/path/to/libamd_smi.so`
+remains as an escape hatch.
 
 ## 6. Enable and verify
 
@@ -106,4 +132,8 @@ sudo -u collector /usr/local/share/MetricCollector/.venv/bin/python /usr/local/s
 
 # Token not picked up: EnvironmentFile path wrong or missing INFLUXDB_TOKEN
 sudo systemctl show metric-collector.service -p EnvironmentFiles,Environment
+
+# Stale PyPI wrapper shadowing the .pth (import fails with
+# `undefined symbol: amdsmi_set_gpu_clk_range` against libamd_smi.so.27)
+sudo /usr/local/share/MetricCollector/.venv/bin/pip uninstall -y amdsmi
 ```
