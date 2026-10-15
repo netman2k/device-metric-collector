@@ -13,10 +13,14 @@ from device_monitor.logsetup import configure_logging
 logger = logging.getLogger(__name__)
 
 INTERVAL_SECONDS = 10
+IP_LOCATION_FETCH_URL = "https://ipconfig.io/json"
 
 # No secrets here: host/db have local defaults, token comes from env/args only.
 ENDPOINT = os.getenv("INFLUXDB_HOST", "http://127.0.0.1:8181")
 DATABASE = os.getenv("INFLUXDB_DATABASE", "edge_dev_db")
+
+
+HOSTNAME = socket.gethostname()
 
 
 def collect_metrics(gpu_type):
@@ -88,8 +92,12 @@ def build_parser():
         help="Collecting Interval in second",
     )
 
-    hostname = socket.gethostname()
-    parser.add_argument("--name", default=hostname, help="Device name")
+    parser.add_argument(
+        "--fetch-location",
+        action="store_true",
+        help="Fetch location information from IP",
+    )
+    parser.add_argument("--name", default=HOSTNAME, help="Device name")
     parser.add_argument("--city", default="Dublin", help="City the device is located")
     parser.add_argument(
         "--region", default="Leinster", help="Region the device is located"
@@ -110,14 +118,44 @@ def build_parser():
     return parser
 
 
+def fetch_ip_location():
+    import requests
+
+    try:
+        resp = requests.get(IP_LOCATION_FETCH_URL, timeout=5)
+        resp.raise_for_status()
+        output = resp.json()
+        logger.info(f"Location information has been successfully fetched: {output}")
+        return {
+            "country": output.get("country", ""),
+            "region": output.get("region_name", ""),
+            "city": output.get("city", ""),
+        }
+    except requests.exceptions.RequestException as err:
+        logger.warning(f"request failed: {err}")
+        return None
+    except (ValueError, KeyError) as err:
+        logger.warning(f"Error occurred while lookup the result: {err}")
+        return None
+
+
 def main():
 
-    parser = build_parser()
-    args = parser.parse_args()
-
+    args = build_parser().parse_args()
     configure_logging(
         log_file=args.log_file, log_dir=args.log_dir, verbosity=args.verbose
     )
+
+    country = args.country
+    region = args.region
+    city = args.city
+
+    if args.fetch_location:
+        result = fetch_ip_location()
+        if result:
+            country = result.get("country") or country
+            region = result.get("region") or region
+            city = result.get("city") or city
 
     logger.info("Starting collector process...")
 
@@ -129,10 +167,7 @@ def main():
             token=args.influxdb_token,
             database=args.influxdb_db,
             point_settings=PointSettings(
-                device=args.name,
-                city=args.city,
-                region=args.region,
-                country=args.country,
+                device=args.name, city=city, region=region, country=country
             ),
         )
     else:
@@ -155,7 +190,7 @@ def main():
 
                     if args.verbose > 1:
                         for point in points:
-                            logging.debug(point.to_line_protocol())
+                            logger.debug(point.to_line_protocol())
 
                     if client is not None:
                         if points:
